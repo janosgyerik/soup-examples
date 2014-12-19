@@ -26,16 +26,21 @@ def get_soup(url):
     return BeautifulSoup(html_doc)
 
 
-def eat_soup(soup):
-    # print(soup.prettify())
+def print_hats_as_gfm_checkboxes(soup):
     for box in soup.find_all('a', attrs={'class': 'box'}):
         name = box.find(attrs={'class': 'hat-name'}).text
         description = box.find(attrs={'class': 'hat-description'}).text
         print('- [ ] {}: {}'.format(name, description))
 
 
+def print_pretty(soup):
+    print(soup.prettify())
+
+
 def main():
-    eat_soup(get_soup(URL))
+    soup = get_soup(URL)
+    print_hats_as_gfm_checkboxes(soup)
+    # print_pretty(soup)
 
 
 if __name__ == '__main__':

@@ -59,8 +59,8 @@ def main():
             votes = int(tr.find(attrs={'class': 'vote-count-post'}).text)
             scores.append((username, votes))
 
-    for pair in sorted(scores, key=lambda x: x[1], reverse=True):
-        print('{}\t{}'.format(pair[1], pair[0]))
+    for name, score in sorted(scores, key=lambda x: x[1], reverse=True):
+        print('{}\t{}'.format(score, name))
 
 
 if __name__ == '__main__':

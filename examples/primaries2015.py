@@ -1,46 +1,32 @@
 #!/usr/bin/env python
 
+from argparse import ArgumentParser
 from urllib import request
 
 from bs4 import BeautifulSoup
-import os
 
 
 URL = 'http://codereview.stackexchange.com/election/1?tab=primary'
+URL = 'http://serverfault.com/election/4?tab=primary'
+URL_FORMAT = 'http://{}/election/{}?tab=primary'
 
 
 def load_html_doc(url):
     return request.urlopen(url).read()
-    cached_file = 'cache/page.html'
-    if os.path.isfile(cached_file) and os.path.getsize(cached_file):
-        with open(cached_file) as fh:
-            html_doc = fh.read()
-    else:
-        html_doc = request.urlopen(url).read()
-        with open(cached_file, 'wb') as fh:
-            fh.write(html_doc)
-    return html_doc
 
 
 def get_soup(url):
     html_doc = load_html_doc(url)
-    return BeautifulSoup(html_doc)
-
-
-def print_hats_as_gfm_checkboxes(soup):
-    for box in soup.find_all('a', attrs={'class': 'box'}):
-        name = box.find(attrs={'class': 'hat-name'}).text
-        description = box.find(attrs={'class': 'hat-description'}).text
-        print('- [ ] {}: {}'.format(name, description))
-
-
-def print_pretty(soup):
-    print(soup.prettify())
+    soup = BeautifulSoup(html_doc)
+    # print(soup.prettify())
+    return soup
 
 
 def main():
+    parser = ArgumentParser('asd')
+    args = parser.parse_args()
+
     soup = get_soup(URL)
-    # print_hats_as_gfm_checkboxes(soup)
     scores = []
     for tr in soup.find_all('tr'):
         if tr.find('td', attrs={'class': 'votecell'}):

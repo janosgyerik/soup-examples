@@ -6,26 +6,23 @@ from urllib import request
 from bs4 import BeautifulSoup
 
 
-COM_URL_FORMAT = 'http://{}.com/election/{}?tab=primary'
 STANDARD_URL_FORMAT = 'http://{}.stackexchange.com/election/{}?tab=primary'
+COM_URL_FORMAT = 'http://{}.com/election/{}?tab=primary'
 
-SITES_INFO = [
+SITES_INFO_HELPER = [
     (('cr', 'codereview'), STANDARD_URL_FORMAT, 'codereview'),
     (('sf', 'serverfault'), COM_URL_FORMAT, 'serverfault'),
     (('so', 'stackoverflow'), COM_URL_FORMAT, 'stackoverflow'),
 ]
 
-SITES = {}
 
-
-def init_sites():
-    for info in SITES_INFO:
+def build_sites_info():
+    sites_info = {}
+    for info in SITES_INFO_HELPER:
         names, url_format, url_component = info
         for name in names:
-            SITES[name] = url_format, url_component
-
-
-init_sites()
+            sites_info[name] = url_format, url_component
+    return sites_info
 
 
 def load_html_doc(url):
@@ -35,19 +32,21 @@ def load_html_doc(url):
 def get_soup(url):
     html_doc = load_html_doc(url)
     soup = BeautifulSoup(html_doc)
-    # print(soup.prettify())
+    # print(soup.prettify())  # for debugging
     return soup
 
 
 def main():
+    sites_info = build_sites_info()
+
     parser = ArgumentParser(description='Show candidates of an SE election in sorted order')
-    parser.add_argument('site', choices=SITES.keys(),
+    parser.add_argument('site', choices=sites_info.keys(),
                         help='Site short name or abbreviation')
     parser.add_argument('-n', type=int, default=1,
                         help='Election number')
     args = parser.parse_args()
 
-    site_info = SITES[args.site]
+    site_info = sites_info[args.site]
     url_format, url_component = site_info
     url = url_format.format(url_component, args.n)
 

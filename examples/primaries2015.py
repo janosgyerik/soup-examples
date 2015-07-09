@@ -31,7 +31,7 @@ def load_html_doc(url):
 
 def get_soup(url):
     html_doc = load_html_doc(url)
-    soup = BeautifulSoup(html_doc)
+    soup = BeautifulSoup(html_doc, 'html.parser')
     # print(soup.prettify())  # for debugging
     return soup
 

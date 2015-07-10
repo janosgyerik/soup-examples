@@ -9,11 +9,11 @@ from bs4 import BeautifulSoup
 STANDARD_URL_FORMAT = 'http://{}.stackexchange.com/election/{}?tab=primary'
 COM_URL_FORMAT = 'http://{}.com/election/{}?tab=primary'
 
-SITES_INFO_HELPER = [
+SITES_INFO_HELPER = (
     (('cr', 'codereview'), STANDARD_URL_FORMAT, 'codereview'),
     (('sf', 'serverfault'), COM_URL_FORMAT, 'serverfault'),
     (('so', 'stackoverflow'), COM_URL_FORMAT, 'stackoverflow'),
-]
+)
 
 
 def build_sites_info():

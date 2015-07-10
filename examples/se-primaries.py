@@ -9,20 +9,31 @@ from bs4 import BeautifulSoup
 STANDARD_URL_FORMAT = 'http://{}.stackexchange.com/election/{}?tab=primary'
 COM_URL_FORMAT = 'http://{}.com/election/{}?tab=primary'
 
-SITES_INFO_HELPER = (
-    (('cr', 'codereview'), STANDARD_URL_FORMAT, 'codereview'),
-    (('sf', 'serverfault'), COM_URL_FORMAT, 'serverfault'),
-    (('so', 'stackoverflow'), COM_URL_FORMAT, 'stackoverflow'),
-)
 
+class SiteInfo:
+    sites = {}
 
-def build_sites_info():
-    sites_info = {}
-    for info in SITES_INFO_HELPER:
-        names, url_format, url_component = info
-        for name in names:
-            sites_info[name] = url_format, url_component
-    return sites_info
+    def __init__(self, name, domain, *aliases):
+        self.name = name
+        self.domain = domain
+        self.sites[name] = self
+        for alias in aliases:
+            self.sites[alias] = self
+
+    def get_primary_url(self, num=1):
+        return 'http://{}/election/{}?tab=primary'.format(self.domain, num)
+
+    @staticmethod
+    def by_name(name):
+        return SiteInfo.sites[name]
+
+    @staticmethod
+    def get_site_names():
+        return SiteInfo.sites.keys()
+
+SiteInfo('codereview', 'codereview.stackexchange.com', 'cr')
+SiteInfo('serverfault', 'serverfault.com', 'sf')
+SiteInfo('stackoverflow', 'stackoverflow.com', 'so')
 
 
 def load_html_doc(url):
@@ -37,18 +48,16 @@ def get_soup(url):
 
 
 def main():
-    sites_info = build_sites_info()
+    site_names = SiteInfo.get_site_names()
 
     parser = ArgumentParser(description='Show candidates of an SE election in sorted order')
-    parser.add_argument('site', choices=sites_info.keys(),
-                        help='Site short name or abbreviation')
-    parser.add_argument('-n', type=int, default=1,
+    parser.add_argument('site', choices=site_names,
+                        help='Site name or abbreviation')
+    parser.add_argument('-n', '--num', type=int, default=1,
                         help='Election number')
     args = parser.parse_args()
 
-    site_info = sites_info[args.site]
-    url_format, url_component = site_info
-    url = url_format.format(url_component, args.n)
+    url = SiteInfo.by_name(args.site).get_primary_url(args.num)
 
     soup = get_soup(url)
     scores = []

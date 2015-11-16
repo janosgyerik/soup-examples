@@ -34,6 +34,7 @@ class SiteInfo:
 SiteInfo('codereview', 'codereview.stackexchange.com', 'cr')
 SiteInfo('serverfault', 'serverfault.com', 'sf')
 SiteInfo('stackoverflow', 'stackoverflow.com', 'so')
+SiteInfo('math', 'math.stackexchange.com', 'math')
 
 
 def load_html_doc(url):

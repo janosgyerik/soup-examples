@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 from argparse import ArgumentParser
-from urllib import request
+import requests
 
 from bs4 import BeautifulSoup
 
@@ -38,7 +38,7 @@ SiteInfo('math', 'math.stackexchange.com', 'math')
 
 
 def load_html_doc(url):
-    return request.urlopen(url).read()
+    return requests.get(url).content
 
 
 def get_soup(url):

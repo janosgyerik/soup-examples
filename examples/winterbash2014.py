@@ -8,15 +8,19 @@ import os
 
 URL = 'http://winterbash2014.stackexchange.com/'
 
+CACHE_DIR = os.path.join(os.path.dirname(__file__), '.cache')
+CACHE_FILE = os.path.join(CACHE_DIR, 'page.html')
+
 
 def load_html_doc(url):
-    cached_file = 'cache/page.html'
-    if os.path.isfile(cached_file) and os.path.getsize(cached_file):
-        with open(cached_file) as fh:
+    if os.path.isfile(CACHE_FILE) and os.path.getsize(CACHE_FILE):
+        with open(CACHE_FILE) as fh:
             html_doc = fh.read()
     else:
         html_doc = request.urlopen(url).read()
-        with open(cached_file, 'wb') as fh:
+        if not os.path.isdir(CACHE_DIR):
+            os.mkdir(CACHE_DIR)
+        with open(CACHE_FILE, 'wb') as fh:
             fh.write(html_doc)
     return html_doc
 
@@ -27,6 +31,7 @@ def get_soup(url):
 
 
 def print_hats_as_gfm_checkboxes(soup):
+    # print(soup.find('a', attrs={'class': 'boxes'}).text)
     for box in soup.find_all('a', attrs={'class': 'box'}):
         name = box.find(attrs={'class': 'hat-name'}).text
         description = box.find(attrs={'class': 'hat-description'}).text

@@ -136,16 +136,47 @@ def update(use_cache):
     remove_old(incoming_urls)
 
 
-def print_new():
-    db = get_db()
-    cursor = db.cars.find().sort([
+def print_item(item):
+    print(item['title'])
+    print(item['url'])
+    print(item['Prix'], item['Année-modèle'], item['Kilométrage'], item['Ville'], sep=', ')
+    print()
+
+
+def print_items(cursor):
+    cursor = cursor.sort([
         ("Prix", pymongo.ASCENDING)
     ])
     for item in cursor:
-        print(item['title'])
-        print(item['url'])
-        print(item['Prix'], item['Année-modèle'], item['Kilométrage'], item['Ville'], sep=', ')
+        print_item(item)
+
+
+def print_new():
+    print_items(get_db().cars.find({'created_day': today()}))
+
+
+def print_archived():
+    print_items(get_db().cars_archive.find({'archived_day': today()}))
+
+
+def any_added_today():
+    return get_db().cars.count({'created_day': today()}) > 0
+
+
+def any_archived_today():
+    return get_db().cars_archive.count({'archived_day': today()}) > 0
+
+
+def report():
+    if any_added_today():
+        print('Entries added today:')
         print()
+        print_new()
+
+    if any_archived_today():
+        print('Entries archived today:')
+        print()
+        print_archived()
 
 
 def get_db():
@@ -154,14 +185,14 @@ def get_db():
 
 def main():
     parser = ArgumentParser(description='')
-    parser.add_argument('command', choices=['update', 'print-new'])
+    parser.add_argument('command', choices=['update', 'report'])
     parser.add_argument('--use-cache', action='store_true')
     args = parser.parse_args()
 
     if args.command == 'update':
         update(args.use_cache)
-    elif args.command == 'print-new':
-        print_new()
+    elif args.command == 'report':
+        report()
 
 
 if __name__ == '__main__':

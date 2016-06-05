@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from datetime import datetime
 
 from urllib import request
 from argparse import ArgumentParser
@@ -79,16 +80,21 @@ def msg(text):
     print('*', text)
 
 
+def today():
+    return datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+
+
 def find_and_insert_new(soup, use_cache):
     client = MongoClient()
     db = client.test
 
-    incoming = []
+    incoming_urls = []
 
     content = soup.find('section', attrs={'class': 'tabsContent'})
     for i, li in enumerate(content.find_all('li')):
         a = li.find('a')
         url = 'https:' + a.get('href')
+        incoming_urls.append(url)
 
         if db.cars.count({'url': url}):
             continue
@@ -101,7 +107,8 @@ def find_and_insert_new(soup, use_cache):
         table = refine_table(extract_table(section))
         table['url'] = url
         table['title'] = title
-        incoming.append(table)
+        table['created_at'] = datetime.now()
+        table['created_day'] = today()
 
         result = db.cars.insert_one(table)
 
@@ -113,7 +120,8 @@ def update(use_cache):
     url = URL_TEMPLATE.format()
     soup = get_soup(url, 'index', use_cache)
 
-    find_and_insert_new(soup, use_cache)
+    incoming_urls = find_and_insert_new(soup, use_cache)
+    # todo archive items that disappeared
 
 
 def main():

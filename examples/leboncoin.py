@@ -11,8 +11,8 @@ from pymongo import MongoClient
 
 CACHE_DIR = 'cache'
 LABEL = 'leboncoin'
-URL_TEMPLATE = 'https://www.leboncoin.fr/voitures/offres/ile_de_france/?f=c&brd=Toyota&mdl=Yaris&fu=4&gb=2'
-# URL_TEMPLATE = 'https://www.leboncoin.fr/voitures/offres/ile_de_france/?f=c&brd=Toyota&mdl=Yaris&gb=2'
+# URL_TEMPLATE = 'https://www.leboncoin.fr/voitures/offres/ile_de_france/?f=c&brd=Toyota&mdl=Yaris&fu=4&gb=2'
+URL_TEMPLATE = 'https://www.leboncoin.fr/voitures/offres/ile_de_france/?f=c&brd=Toyota&mdl=Yaris&gb=2'
 
 LABEL_PRICE = 'Prix'
 LABEL_YEAR = 'Année-modèle'

@@ -1,15 +1,12 @@
 #!/usr/bin/env python
 from datetime import datetime
-
 from urllib import request
 from argparse import ArgumentParser
 
 from bs4 import BeautifulSoup
 import os
 import re
-
 from pymongo import MongoClient
-
 
 CACHE_DIR = 'cache'
 LABEL = 'leboncoin'
@@ -88,13 +85,13 @@ def find_and_insert_new(soup, use_cache):
     client = MongoClient()
     db = client.test
 
-    incoming_urls = []
+    incoming_urls = set()
 
     content = soup.find('section', attrs={'class': 'tabsContent'})
     for i, li in enumerate(content.find_all('li')):
         a = li.find('a')
         url = 'https:' + a.get('href')
-        incoming_urls.append(url)
+        incoming_urls.add(url)
 
         if db.cars.count({'url': url}):
             continue
@@ -113,7 +110,19 @@ def find_and_insert_new(soup, use_cache):
         result = db.cars.insert_one(table)
 
         msg('inserted {}, id = {}'.format(title, result.inserted_id))
-        break
+
+    return incoming_urls
+
+
+def remove_old(incoming_urls):
+    db = MongoClient().test
+
+    for item in db.cars.find():
+        if item['url'] not in incoming_urls:
+            msg('archiving {}, id = {}'.format(item['title'], item['_id']))
+            db.cars_archive.insert_one(item)
+            msg('removing {}, id = {}'.format(item['title'], item['_id']))
+            db.cars.remove({'url': item['url']})
 
 
 def update(use_cache):
@@ -121,7 +130,7 @@ def update(use_cache):
     soup = get_soup(url, 'index', use_cache)
 
     incoming_urls = find_and_insert_new(soup, use_cache)
-    # todo archive items that disappeared
+    remove_old(incoming_urls)
 
 
 def main():

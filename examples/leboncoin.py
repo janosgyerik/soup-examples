@@ -83,8 +83,7 @@ def today():
 
 
 def find_and_insert_new(soup, use_cache):
-    client = MongoClient()
-    db = client.test
+    db = get_db()
 
     incoming_urls = set()
 
@@ -116,7 +115,7 @@ def find_and_insert_new(soup, use_cache):
 
 
 def remove_old(incoming_urls):
-    db = MongoClient().test
+    db = get_db()
 
     for item in db.cars.find():
         if item['url'] not in incoming_urls:
@@ -138,7 +137,7 @@ def update(use_cache):
 
 
 def print_new():
-    db = MongoClient().test
+    db = get_db()
     cursor = db.cars.find().sort([
         ("Prix", pymongo.ASCENDING)
     ])
@@ -147,6 +146,10 @@ def print_new():
         print(item['url'])
         print(item['Prix'], item['Année-modèle'], item['Kilométrage'], item['Ville'], sep=', ')
         print()
+
+
+def get_db():
+    return MongoClient().test
 
 
 def main():

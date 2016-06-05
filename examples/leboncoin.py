@@ -120,8 +120,11 @@ def remove_old(incoming_urls):
 
     for item in db.cars.find():
         if item['url'] not in incoming_urls:
+            item['archived_at'] = datetime.now()
+            item['archived_day'] = today()
             msg('archiving {}, id = {}'.format(item['title'], item['_id']))
             db.cars_archive.insert_one(item)
+
             msg('removing {}, id = {}'.format(item['title'], item['_id']))
             db.cars.remove({'url': item['url']})
 

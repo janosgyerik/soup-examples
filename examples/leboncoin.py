@@ -5,6 +5,7 @@ from argparse import ArgumentParser
 
 from bs4 import BeautifulSoup
 import os
+import pymongo
 import re
 from pymongo import MongoClient
 
@@ -133,14 +134,28 @@ def update(use_cache):
     remove_old(incoming_urls)
 
 
+def print_new():
+    db = MongoClient().test
+    cursor = db.cars.find().sort([
+        ("Prix", pymongo.ASCENDING)
+    ])
+    for item in cursor:
+        print(item['title'])
+        print(item['url'])
+        print(item['Prix'], item['Année-modèle'], item['Kilométrage'], item['Ville'], sep=', ')
+        print()
+
+
 def main():
     parser = ArgumentParser(description='')
-    parser.add_argument('command', choices=['update'])
+    parser.add_argument('command', choices=['update', 'print-new'])
     parser.add_argument('--use-cache', action='store_true')
     args = parser.parse_args()
 
     if args.command == 'update':
         update(args.use_cache)
+    elif args.command == 'print-new':
+        print_new()
 
 
 if __name__ == '__main__':

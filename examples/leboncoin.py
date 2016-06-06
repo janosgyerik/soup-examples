@@ -14,9 +14,25 @@ LABEL = 'leboncoin'
 # URL_TEMPLATE = 'https://www.leboncoin.fr/voitures/offres/ile_de_france/?f=c&brd=Toyota&mdl=Yaris&fu=4&gb=2'
 URL_TEMPLATE = 'https://www.leboncoin.fr/voitures/offres/ile_de_france/?f=c&brd=Toyota&mdl=Yaris&gb=2'
 
-LABEL_PRICE = 'Prix'
-LABEL_YEAR = 'Année-modèle'
-LABEL_KM = 'Kilométrage'
+LABEL_URL = 'url'
+LABEL_TITLE = 'title'
+LABEL_CITY = 'city'
+
+LABEL_PRICE = 'price'
+LABEL_YEAR = 'year'
+LABEL_KM = 'km'
+
+LABEL_CREATED_AT = 'created_at'
+LABEL_CREATED_DAY = 'created_day'
+LABEL_ARCHIVED_AT = 'archived_at'
+LABEL_ARCHIVED_DAY = 'archived_day'
+
+NAMES_DICT = {
+    'Prix': LABEL_PRICE,
+    'Année-modèle': LABEL_YEAR,
+    'Kilométrage': LABEL_KM,
+    'Ville': LABEL_CITY,
+}
 
 
 def load_html_doc(url, label, use_cache=False):
@@ -62,6 +78,10 @@ def clean_int(dirty_int):
 
 
 def refine_table(table):
+    for orig, renamed in NAMES_DICT.items():
+        if orig in table:
+            table[renamed] = table[orig]
+
     if LABEL_PRICE in table:
         table[LABEL_PRICE] = clean_int(table[LABEL_PRICE])
 
@@ -93,19 +113,19 @@ def find_and_insert_new(soup, use_cache):
         url = 'https:' + a.get('href')
         incoming_urls.add(url)
 
-        if db.cars.count({'url': url}):
+        if db.cars.count({LABEL_URL: url}):
             continue
 
-        title = a.get('title')
+        title = a.get(LABEL_TITLE)
 
         soup = get_soup(url, 'result{}'.format(i), use_cache)
         section = soup.find('section')
 
         table = refine_table(extract_table(section))
-        table['url'] = url
-        table['title'] = title
-        table['created_at'] = datetime.now()
-        table['created_day'] = today()
+        table[LABEL_URL] = url
+        table[LABEL_TITLE] = title
+        table[LABEL_CREATED_AT] = datetime.now()
+        table[LABEL_CREATED_DAY] = today()
 
         result = db.cars.insert_one(table)
 
@@ -118,14 +138,14 @@ def remove_old(incoming_urls):
     db = get_db()
 
     for item in db.cars.find():
-        if item['url'] not in incoming_urls:
-            item['archived_at'] = datetime.now()
-            item['archived_day'] = today()
-            msg('archiving {}, id = {}'.format(item['title'], item['_id']))
+        if item[LABEL_URL] not in incoming_urls:
+            item[LABEL_ARCHIVED_AT] = datetime.now()
+            item[LABEL_ARCHIVED_DAY] = today()
+            msg('archiving {}, id = {}'.format(item[LABEL_TITLE], item['_id']))
             db.cars_archive.insert_one(item)
 
-            msg('removing {}, id = {}'.format(item['title'], item['_id']))
-            db.cars.remove({'url': item['url']})
+            msg('removing {}, id = {}'.format(item[LABEL_TITLE], item['_id']))
+            db.cars.remove({LABEL_URL: item[LABEL_URL]})
 
 
 def update(use_cache):
@@ -137,34 +157,34 @@ def update(use_cache):
 
 
 def print_item(item):
-    print(item['title'])
-    print(item['url'])
-    print(item['Prix'], item['Année-modèle'], item['Kilométrage'], item['Ville'], sep=', ')
+    print(item[LABEL_TITLE])
+    print(item[LABEL_URL])
+    print(item[LABEL_PRICE], item[LABEL_YEAR], item[LABEL_KM], item[LABEL_CITY], sep=', ')
     print()
 
 
 def print_items(cursor):
     cursor = cursor.sort([
-        ("Prix", pymongo.ASCENDING)
+        (LABEL_PRICE, pymongo.ASCENDING)
     ])
     for item in cursor:
         print_item(item)
 
 
 def print_new():
-    print_items(get_db().cars.find({'created_day': today()}))
+    print_items(get_db().cars.find({LABEL_CREATED_DAY: today()}))
 
 
 def print_archived():
-    print_items(get_db().cars_archive.find({'archived_day': today()}))
+    print_items(get_db().cars_archive.find({LABEL_ARCHIVED_DAY: today()}))
 
 
 def any_added_today():
-    return get_db().cars.count({'created_day': today()}) > 0
+    return get_db().cars.count({LABEL_CREATED_DAY: today()}) > 0
 
 
 def any_archived_today():
-    return get_db().cars_archive.count({'archived_day': today()}) > 0
+    return get_db().cars_archive.count({LABEL_ARCHIVED_DAY: today()}) > 0
 
 
 def report():

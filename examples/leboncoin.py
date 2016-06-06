@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 from datetime import datetime
+import textwrap
 from urllib import request
 from argparse import ArgumentParser
 
@@ -13,6 +14,8 @@ CACHE_DIR = 'cache'
 LABEL = 'leboncoin'
 # URL_TEMPLATE = 'https://www.leboncoin.fr/voitures/offres/ile_de_france/?f=c&brd=Toyota&mdl=Yaris&fu=4&gb=2'
 URL_TEMPLATE = 'https://www.leboncoin.fr/voitures/offres/ile_de_france/?f=c&brd=Toyota&mdl=Yaris&gb=2'
+
+INCOMING_ITEMS_FILE = os.path.join(CACHE_DIR, 'incoming.txt')
 
 LABEL_URL = 'url'
 LABEL_TITLE = 'title'
@@ -106,6 +109,7 @@ def find_and_insert_new(soup, use_cache):
     db = get_db()
 
     incoming_urls = set()
+    incoming_items = []
 
     content = soup.find('section', attrs={'class': 'tabsContent'})
     for i, li in enumerate(content.find_all('li')):
@@ -130,6 +134,13 @@ def find_and_insert_new(soup, use_cache):
         result = db.cars.insert_one(table)
 
         msg('inserted {}, id = {}'.format(title, result.inserted_id))
+
+        incoming_items.append(table)
+
+    with open(INCOMING_ITEMS_FILE, 'w') as fh:
+        for item in incoming_items:
+            fh.write(to_string(item))
+            fh.write('\n')
 
     return incoming_urls
 
@@ -156,11 +167,17 @@ def update(use_cache):
     remove_old(incoming_urls)
 
 
+def to_string(item):
+    return textwrap.dedent('''
+    {title}
+    {url}
+    {price}, {year}, {km}, {city}
+    '''.format(title=item[LABEL_TITLE], url=item[LABEL_URL], price=item[LABEL_PRICE],
+               year=item[LABEL_YEAR], km=item[LABEL_KM], city=item[LABEL_CITY])).lstrip()
+
+
 def print_item(item):
-    print(item[LABEL_TITLE])
-    print(item[LABEL_URL])
-    print(item[LABEL_PRICE], item[LABEL_YEAR], item[LABEL_KM], item[LABEL_CITY], sep=', ')
-    print()
+    print(to_string(item))
 
 
 def print_items(cursor):

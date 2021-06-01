@@ -4,4 +4,4 @@ beautifulsoup4==4.4.1
 Cython==0.22.1
 pymongo==3.2.2
 requests==2.8.1
-urllib3==1.10
+urllib3==1.26.5
